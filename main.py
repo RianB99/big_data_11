@@ -11,34 +11,39 @@ def load_data():
     filter_col_prop = [col for col in df_train if col.startswith('property')]
     filter_col_amenities = [col for col in df_train if col.startswith('amenities')]
     filter_col_neighbourhood = [col for col in df_train if col.startswith('neighbourhood')]
-    one_hot = len(filter_col_prop) + len(filter_col_amenities) + len(filter_col_neighbourhood)
-    one_hot_cols = [filter_col_neighbourhood,filter_col_prop,filter_col_amenities]
-    return df_train, len(df_train.columns) - one_hot + 3, len(df_train), one_hot_cols
+    one_hot_cols = [filter_col_neighbourhood, filter_col_prop, filter_col_amenities]
+    return df_train, len(df_train), one_hot_cols
 
 def linear_regression(df, variables, rows, one_hot_cols, model_type):
+
     df = df[:rows]
+
     # define response variable
     y = df["price"]
 
     # define predictor variables
     x = list(df.columns)
-    x.remove("price")
-    if variables >= 24:
-        x += one_hot_cols[0]
-        if variables >= 25:
-            x += one_hot_cols[1]
-            if variables >= 26:
-                x += one_hot_cols[2]
-    x = df[x[:variables]]
 
-    # start timer
-    start = time.time()
+    x.remove("price")
+
+    x = x[:variables]
+
+    if variables >= 25:
+        x += one_hot_cols[0]
+        if variables >= 49:
+            x += one_hot_cols[1]
+            if variables >= 99:
+                x += one_hot_cols[2]
+    x = df[x]
 
     # linear regressor or decision tree regressor
     if model_type == 1:
         model = RandomForestRegressor()
     else:
         model = LinearRegression()
+
+    # start timer
+    start = time.time()
 
     # fit the model
     model.fit(x,y)
@@ -49,9 +54,9 @@ def plot_data(final_df):
     fig = px.line(final_df, x="rows", y="duration", color="variables",
                   line_group="variables", hover_name="variables")
     fig.show()
-    # plt.show()
 
 if __name__ == "__main__":
+
     try:
         sys.argv[1]
     except IndexError:
@@ -62,16 +67,17 @@ if __name__ == "__main__":
         print(["linear regression", "Random Forest regression"][model_type], "is selected")
 
     results = []
+    train_df, length_rows, one_hot_cols = load_data()
+    variable_list = [3, 6, 9, 11, 46, 103, 279]
 
-    train_df, length_variables, length_rows, one_hot_cols = load_data()
-    for variables in range(int(length_variables/2),length_variables, 3):
+    for variables in variable_list:
         for rows in range(int(length_rows/100), length_rows, int(length_rows/100)):
             duration = linear_regression(train_df, variables, rows, one_hot_cols, model_type)
-            results.append([variables,rows,duration])
+            results.append([variables, rows, duration])
 
 
     data_frame_results = pd.DataFrame.from_records(results)
-    data_frame_results.columns = ["variables","rows","duration"]
+    data_frame_results.columns = ["variables", "rows", "duration"]
     data_frame_results.to_csv("results.csv")
     plot_data(data_frame_results)
 
