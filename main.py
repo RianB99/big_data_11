@@ -60,11 +60,12 @@ if __name__ == "__main__":
     try:
         sys.argv[1]
     except IndexError:
-        print("No model type is given, Linear regression is selected")
         model_type = 0
     else:
         model_type = int(sys.argv[1])
-        print(["linear regression", "Random Forest regression"][model_type], "is selected")
+
+    model_name = ["Linear-Regression", "Random-Forest-regression"][model_type]
+    print(model_name, "is selected")
 
     results = []
     train_df, length_rows, one_hot_cols = load_data()
@@ -78,7 +79,7 @@ if __name__ == "__main__":
 
     data_frame_results = pd.DataFrame.from_records(results)
     data_frame_results.columns = ["variables", "rows", "duration"]
-    data_frame_results.to_csv("results.csv")
+    data_frame_results.to_csv("results-"+str(model_name)+".csv")
     plot_data(data_frame_results)
 
 
