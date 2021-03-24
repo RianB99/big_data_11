@@ -1,15 +1,9 @@
-import pandas as pd
-import numpy as np
+import sys
 import time
-import matplotlib.pyplot as plt
-import statsmodels.api as sm
+import pandas as pd
 import plotly.express as px
-from copy import deepcopy
-from sklearn import preprocessing
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
-
 
 
 def load_data():
@@ -21,8 +15,7 @@ def load_data():
     one_hot_cols = [filter_col_neighbourhood,filter_col_prop,filter_col_amenities]
     return df_train, len(df_train.columns) - one_hot + 3, len(df_train), one_hot_cols
 
-def linear_regression(df, variables, rows, one_hot_cols):
-
+def linear_regression(df, variables, rows, one_hot_cols, model_type):
     df = df[:rows]
     # define response variable
     y = df["price"]
@@ -41,28 +34,45 @@ def linear_regression(df, variables, rows, one_hot_cols):
     # start timer
     start = time.time()
 
-    # fit linear regression model
-    model = sm.OLS(y, x).fit()
+    # linear regressor or decision tree regressor
+    if model_type == 1:
+        model = RandomForestRegressor()
+    else:
+        model = LinearRegression()
 
+    # fit the model
+    model.fit(x,y)
     return time.time() - start
 
 def plot_data(final_df):
     # plot code here
-    final_df.plot()
-    plt.show()
+    fig = px.line(final_df, x="rows", y="duration", color="variables",
+                  line_group="variables", hover_name="variables")
+    fig.show()
+    # plt.show()
 
 if __name__ == "__main__":
-    results = {}
+    try:
+        sys.argv[1]
+    except IndexError:
+        print("No model type is given, Linear regression is selected")
+        model_type = 0
+    else:
+        model_type = int(sys.argv[1])
+        print(["linear regression", "Random Forest regression"][model_type], "is selected")
+
+    results = []
+
     train_df, length_variables, length_rows, one_hot_cols = load_data()
     for variables in range(int(length_variables/2),length_variables, 3):
-        rows_duration = {}
         for rows in range(int(length_rows/100), length_rows, int(length_rows/100)):
-            duration = linear_regression(train_df, variables, rows, one_hot_cols)
-            rows_duration[rows] = duration
-        results[variables] = rows_duration
+            duration = linear_regression(train_df, variables, rows, one_hot_cols, model_type)
+            results.append([variables,rows,duration])
 
-    data_frame_results = pd.DataFrame(results)
-    data_frame_results.to_csv("results_linear_regression.csv")
+
+    data_frame_results = pd.DataFrame.from_records(results)
+    data_frame_results.columns = ["variables","rows","duration"]
+    data_frame_results.to_csv("results.csv")
     plot_data(data_frame_results)
 
 
