@@ -1,3 +1,5 @@
 data/
 *.ipynb
 .gitignore
+/results_linear_regression.csv
+/results.csv
