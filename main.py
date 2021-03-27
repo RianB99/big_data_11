@@ -50,9 +50,17 @@ def linear_regression(df, variables, rows, one_hot_cols, model_type):
     return time.time() - start
 
 def plot_data(final_df):
-    # plot code here
-    fig = px.line(final_df, x="rows", y="duration", color="variables",
-                  line_group="variables", hover_name="variables")
+    fig = px.line(final_df,
+                  x = "rows", 
+                  y = "duration", 
+                  color = "variables",
+                  line_group = "variables", 
+                  hover_name = "variables",
+                  labels = {"rows" : "Number of rows", 
+                            "duration" : "Duration (in seconds)", 
+                            "variables" : "Number of variables"
+                           }
+                 )
     fig.show()
 
 if __name__ == "__main__":
