@@ -1,9 +1,12 @@
 import sys
 import time
 import pandas as pd
+import numpy as np
 import plotly.express as px
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn import metrics
 
 
 def load_data():
@@ -14,7 +17,7 @@ def load_data():
     one_hot_cols = [filter_col_neighbourhood, filter_col_prop, filter_col_amenities]
     return df_train, len(df_train), one_hot_cols
 
-def linear_regression(df, variables, rows, one_hot_cols, model_type):
+def regressor(df, variables, rows, one_hot_cols, model_type):
 
     df = df[:rows]
 
@@ -36,7 +39,9 @@ def linear_regression(df, variables, rows, one_hot_cols, model_type):
                 x += one_hot_cols[2]
     x = df[x]
 
-    # linear regressor or decision tree regressor
+    X_train, X_test, y_train, y_test = train_test_split(x, y, test_size= 0.2, random_state= 42)
+
+    # linear regressor or random forest regressor
     if model_type == 1:
         model = RandomForestRegressor()
     else:
@@ -46,8 +51,11 @@ def linear_regression(df, variables, rows, one_hot_cols, model_type):
     start = time.time()
 
     # fit the model
-    model.fit(x,y)
-    return time.time() - start
+    model.fit(X_train,y_train)
+    pred = model.predict(X_test)
+    mse = metrics.mean_squared_error(np.array(y_test), np.array(pred), squared=False)
+
+    return time.time() - start, mse
 
 def plot_data(final_df, log_x, log_y):
     fig = px.line(final_df,
@@ -83,12 +91,11 @@ if __name__ == "__main__":
 
     for variables in variable_list:
         for rows in range(int(length_rows/100), length_rows, int(length_rows/100)):
-            duration = linear_regression(train_df, variables, rows, one_hot_cols, model_type)
-            results.append([variables, rows, duration])
-
+            duration, score = regressor(train_df, variables, rows, one_hot_cols, model_type)
+            results.append([variables, rows, duration, score])
 
     data_frame_results = pd.DataFrame.from_records(results)
-    data_frame_results.columns = ["variables", "rows", "duration"]
+    data_frame_results.columns = ["variables", "rows", "duration", "rmse"]
     data_frame_results.to_csv("results-"+str(model_name)+".csv")
     
     # multiple plots to compare regular vs logscale axes
