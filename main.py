@@ -11,13 +11,11 @@ from sklearn import metrics
 
 def load_data():
     df_train = pd.read_csv('./data/cleaned_listings.csv', index_col='id')
-    filter_col_prop = [col for col in df_train if col.startswith('property')]
-    filter_col_amenities = [col for col in df_train if col.startswith('amenities')]
-    filter_col_neighbourhood = [col for col in df_train if col.startswith('neighbourhood')]
-    one_hot_cols = [filter_col_neighbourhood, filter_col_prop, filter_col_amenities]
-    return df_train, len(df_train), one_hot_cols
+    # maybe delete len amenities
 
-def regressor(df, variables, rows, one_hot_cols, model_type):
+    return df_train, len(df_train)
+
+def regressor(df, variables, rows, model_type):
 
     df = df[:rows]
 
@@ -31,12 +29,6 @@ def regressor(df, variables, rows, one_hot_cols, model_type):
 
     x = x[:variables]
 
-    if variables >= 25:
-        x += one_hot_cols[0]
-        if variables >= 49:
-            x += one_hot_cols[1]
-            if variables >= 99:
-                x += one_hot_cols[2]
     x = df[x]
 
     X_train, X_test, y_train, y_test = train_test_split(x, y, test_size= 0.2, random_state= 42)
@@ -57,7 +49,7 @@ def regressor(df, variables, rows, one_hot_cols, model_type):
 
     return time.time() - start, mse
 
-def plot_data(final_df, log_x, log_y):
+def plot_data(final_df):
     fig = px.line(final_df,
                   x = "rows", 
                   y = "duration", 
@@ -68,8 +60,22 @@ def plot_data(final_df, log_x, log_y):
                             "duration" : "Runtime in Seconds", 
                             "variables" : "Number of Variables"
                            },
-                  log_x = log_x,
-                  log_y = log_y
+                  log_x = False,
+                  log_y = True
+                 )
+    fig.show()
+    fig = px.line(final_df,
+                  x = "rows",
+                  y = "rmse",
+                  color = "variables",
+                  line_group = "variables",
+                  hover_name = "variables",
+                  labels = {"rmse" : "RMSE of model",
+                            "duration" : "Runtime in Seconds",
+                            "variables" : "Number of Variables"
+                           },
+                  log_x = False,
+                  log_y = False
                  )
     fig.show()
 
@@ -86,12 +92,12 @@ if __name__ == "__main__":
     print(model_name, "is selected")
 
     results = []
-    train_df, length_rows, one_hot_cols = load_data()
+    train_df, length_rows = load_data()
     variable_list = [3, 6, 9, 11, 46, 103, 279]
 
     for variables in variable_list:
         for rows in range(int(length_rows/100), length_rows, int(length_rows/100)):
-            duration, score = regressor(train_df, variables, rows, one_hot_cols, model_type)
+            duration, score = regressor(train_df, variables, rows, model_type)
             results.append([variables, rows, duration, score])
 
     data_frame_results = pd.DataFrame.from_records(results)
@@ -99,7 +105,4 @@ if __name__ == "__main__":
     data_frame_results.to_csv("results-"+str(model_name)+".csv")
     
     # multiple plots to compare regular vs logscale axes
-    plot_data(data_frame_results, False, False)
-    plot_data(data_frame_results, True, False)
-    plot_data(data_frame_results, False, True)
-    plot_data(data_frame_results, True, True)
+    plot_data(data_frame_results)
