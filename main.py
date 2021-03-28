@@ -11,8 +11,7 @@ from sklearn import metrics
 
 def load_data():
     df_train = pd.read_csv('./data/cleaned_listings.csv', index_col='id')
-    # maybe delete len amenities
-
+    df_train.pop("len_amenities")
     return df_train, len(df_train)
 
 def regressor(df, variables, rows, model_type):
@@ -93,7 +92,7 @@ if __name__ == "__main__":
 
     results = []
     train_df, length_rows = load_data()
-    variable_list = [3, 6, 9, 11, 46, 103, 279]
+    variable_list = [5, 10, 45, 278]
 
     for variables in variable_list:
         for rows in range(int(length_rows/100), length_rows, int(length_rows/100)):
