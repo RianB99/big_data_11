@@ -14,23 +14,12 @@ def load_data():
     df_train.pop("len_amenities")
     return df_train, len(df_train)
 
-def regressor(df, variables, rows, model_type):
+def regressor(x,y, variables, rows, model_type):
 
-    df = df[:rows]
+    X_total = x[:rows]
+    Y_total = y[:rows]
 
-    # define response variable
-    y = df["price"]
-
-    # define predictor variables
-    x = list(df.columns)
-
-    x.remove("price")
-
-    x = x[:variables]
-
-    x = df[x]
-
-    X_train, X_test, y_train, y_test = train_test_split(x, y, test_size= 0.2, random_state= 42)
+    X_train, X_test, y_train, y_test = train_test_split(X_total, Y_total, test_size= 0.2, random_state= 42)
 
     # linear regressor or random forest regressor
     if model_type == 1:
@@ -79,14 +68,13 @@ def plot_data(final_df):
     fig.show()
 
 if __name__ == "__main__":
-
+    real_start = time.time()
     try:
         sys.argv[1]
     except IndexError:
         model_type = 0
     else:
         model_type = int(sys.argv[1])
-
     model_name = ["Linear-Regression", "Random-Forest-regression"][model_type]
     print(model_name, "is selected")
 
@@ -94,9 +82,19 @@ if __name__ == "__main__":
     train_df, length_rows = load_data()
     variable_list = [5, 10, 45, 278]
 
+    # define response variable
+    y = train_df["price"]
     for variables in variable_list:
+
+        # define predictor variables
+        x = list(train_df.columns)
+
+        x.remove("price")
+
+        x = train_df[x[:variables]]
+
         for rows in range(int(length_rows/100), length_rows, int(length_rows/100)):
-            duration, score = regressor(train_df, variables, rows, model_type)
+            duration, score = regressor(x,y, variables, rows, model_type)
             results.append([variables, rows, duration, score])
 
     data_frame_results = pd.DataFrame.from_records(results)
@@ -105,3 +103,5 @@ if __name__ == "__main__":
     
     # multiple plots to compare regular vs logscale axes
     plot_data(data_frame_results)
+
+    print("Duration of the the project:", round(time.time() - real_start,2), "seconds")
