@@ -49,17 +49,19 @@ def linear_regression(df, variables, rows, one_hot_cols, model_type):
     model.fit(x,y)
     return time.time() - start
 
-def plot_data(final_df):
+def plot_data(final_df, log_x, log_y):
     fig = px.line(final_df,
                   x = "rows", 
                   y = "duration", 
                   color = "variables",
                   line_group = "variables", 
                   hover_name = "variables",
-                  labels = {"rows" : "Number of rows", 
-                            "duration" : "Duration (in seconds)", 
-                            "variables" : "Number of variables"
-                           }
+                  labels = {"rows" : "Number of Rows", 
+                            "duration" : "Runtime in Seconds", 
+                            "variables" : "Number of Variables"
+                           },
+                  log_x = log_x,
+                  log_y = log_y
                  )
     fig.show()
 
@@ -88,7 +90,9 @@ if __name__ == "__main__":
     data_frame_results = pd.DataFrame.from_records(results)
     data_frame_results.columns = ["variables", "rows", "duration"]
     data_frame_results.to_csv("results-"+str(model_name)+".csv")
-    plot_data(data_frame_results)
-
-
-
+    
+    # multiple plots to compare regular vs logscale axes
+    plot_data(data_frame_results, False, False)
+    plot_data(data_frame_results, True, False)
+    plot_data(data_frame_results, False, True)
+    plot_data(data_frame_results, True, True)
