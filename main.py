@@ -37,6 +37,18 @@ def regressor(x,y, variables, rows, model_type):
 
     return time.time() - start, mse
 
+def correlation(train_df):
+    corr_df = train_df
+    correlation = corr_df.corrwith(corr_df["price"])
+    corr_df = pd.DataFrame(correlation)
+    corr_df.columns = ["Correlation_with_price"]
+    ordered = corr_df.sort_values(by="Correlation_with_price", ascending=False)
+    order = list(ordered.index)
+    ordered_df = train_df[order]
+    ordered.to_csv("correlation.csv")
+    return ordered_df
+
+
 def plot_data(final_df):
     fig = px.line(final_df,
                   x = "rows", 
@@ -48,6 +60,7 @@ def plot_data(final_df):
                             "duration" : "Runtime in Seconds", 
                             "variables" : "Number of Variables"
                            },
+                  title="Duration in seconds for Random Forest Regressor predicting price with aggregating database",
                   log_x = False,
                   log_y = True
                  )
@@ -62,8 +75,9 @@ def plot_data(final_df):
                             "duration" : "Runtime in Seconds",
                             "variables" : "Number of Variables"
                            },
+                  title = "RMSE scores for Random Forest Regressor predicting price with aggregating database",
                   log_x = False,
-                  log_y = False
+                  log_y = True,
                  )
     fig.show()
 
@@ -82,9 +96,11 @@ if __name__ == "__main__":
     train_df, length_rows = load_data()
     variable_list = [5, 10, 45, 278]
 
+    train_df = correlation(train_df)
+
     # define response variable
     y = train_df["price"]
-    for variables in variable_list:
+    for variables in range(25,278,25):
 
         # define predictor variables
         x = list(train_df.columns)
